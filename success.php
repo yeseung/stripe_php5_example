@@ -1,10 +1,4 @@
 <?php
-/**
- * success.php
- * - 결제 성공 후 돌아오는 페이지
- * - 쿼리스트링으로 전달된 session_id를 이용해 Stripe에서 결제 상태를 다시 확인합니다.
- * - 실제 서비스에서는 여기서 DB 갱신(광고 제거 권한 부여 등)을 처리하면 됩니다.
- */
 require_once 'config.php';
 
 $session_id = isset($_GET['session_id']) ? $_GET['session_id'] : '';
@@ -41,10 +35,18 @@ if ($httpCode !== 200 || !is_array($session)) {
     exit;
 }
 
-// payment_status: paid, unpaid 등
+// 상태/금액 확인
 $payment_status = isset($session['payment_status']) ? $session['payment_status'] : 'unknown';
 $amount_total   = isset($session['amount_total']) ? $session['amount_total'] : 0; // 센트 단위
 $currency       = isset($session['currency']) ? strtoupper($session['currency']) : '';
+
+// TODO: 여기서 DB 처리 (회원 광고제거 활성화 등)
+if ($payment_status === 'paid') {
+    // 예시:
+    // 1. $session['client_reference_id'] 나 metadata로 회원 ID 넘겨놨다면 읽어오기
+    // 2. orders 테이블에 로그 기록
+    // 3. member 테이블에 adfree 만료일 +1년 업데이트
+}
 
 ?>
 <!DOCTYPE html>
@@ -58,11 +60,11 @@ $currency       = isset($session['currency']) ? strtoupper($session['currency'])
     </style>
 </head>
 <body>
-    <div class="box">
-        <h1>결제가 완료되었습니다.</h1>
-        <p>결제 상태: <strong><?php echo htmlspecialchars($payment_status); ?></strong></p>
-        <p>결제 금액: <strong><?php echo htmlspecialchars($amount_total / 100.0) . ' ' . htmlspecialchars($currency); ?></strong></p>
-        <p>이제 광고 제거 기능이 활성화됩니다. (실제 서비스에서는 DB에 해당 내용을 반영해 주세요.)</p>
-    </div>
+<div class="box">
+    <h1>결제가 완료되었습니다.</h1>
+    <p>결제 상태: <strong><?php echo htmlspecialchars($payment_status); ?></strong></p>
+    <p>결제 금액: <strong><?php echo htmlspecialchars($amount_total / 100.0) . ' ' . htmlspecialchars($currency); ?></strong></p>
+    <p>이제 광고 제거 기능이 활성화됩니다. (실제 서비스에서는 DB에 반영해 주세요.)</p>
+</div>
 </body>
 </html>
